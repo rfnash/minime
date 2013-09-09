@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# © 2013  Nils Dagsson Moskopp (erlehmann)
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+
+# Dieses Programm hat das Ziel, die Medienkompetenz der Leser zu
+# steigern. Gelegentlich packe ich sogar einen handfesten Buffer
+# Overflow oder eine Format String Vulnerability zwischen die anderen
+# Codezeilen und schreibe das auch nicht dran.
+
+import string
+import subprocess
+import sys
+import urwid
+
+palette = [ ('mini', 'black', 'white') ]
+mainbuffer = urwid.Edit(edit_text=u'', multiline=True, align='left')
+mainfiller = urwid.Filler(mainbuffer, valign='top')
+minibuffer = urwid.Edit(edit_text=u'', multiline=False, align='left')
+mini_attr = urwid.AttrWrap(minibuffer, 'mini')
+frame = urwid.Frame(body=mainfiller, footer=mini_attr, focus_part='body')
+
+def handle_external_command(command, text):
+    process = subprocess.Popen([command], stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, shell=True)
+    process.stdin.write(text.encode('utf-8'))
+    process.stdin.close()
+    result = process.stdout.read().decode('utf-8')
+    mainbuffer.set_edit_text(result)
+    minibuffer.set_edit_text(u'')
+
+def get_file(argument):
+    result = u''
+    try:
+        with open(argument, 'r') as inputfile:
+            result = inputfile.read().decode('utf-8')
+            mainbuffer.set_edit_text(result)
+            minibuffer.set_edit_text(argument)
+            minibuffer.set_edit_pos(0)
+    except IOError:
+        pass
+
+def put_file(argument, text):
+    try:
+        with open(argument, 'w') as outputfile:
+            outputfile.write(text.encode('utf-8'))
+            minibuffer.set_edit_text(argument)
+            minibuffer.set_edit_pos(0)
+    except IOError:
+        pass
+
+def handle_command(command, text):
+    try:
+        prefix, argument = command[0], command[1:]
+    except IndexError:
+        return
+    if prefix == '<':
+        get_file(argument)
+    elif prefix == '>':
+        put_file(argument, text)
+    elif prefix == '|':
+        handle_external_command(argument, text)
+    else:
+        handle_external_command(command, u'')
+    frame.set_focus('body')
+
+def word_at_pos(text, pos):
+    start = end = pos
+    while(start!=0):
+        if text[start-1] in string.whitespace:
+            break
+        start-=1
+    while(end!=len(text)):
+        if text[end] in string.whitespace:
+            break
+        end+=1
+    return text[start:end]
+
+def handle_input(key):
+    focus = frame.get_focus()
+    maintext, minitext = mainbuffer.get_text()[0], minibuffer.get_text()[0]
+    if key == 'enter':
+        if focus == 'footer':
+            handle_command(minitext, maintext)
+    if key == 'tab':
+        if focus == 'body':
+            frame.set_focus('footer')
+            if minitext == u'':
+                current_word = word_at_pos(maintext, mainbuffer.edit_pos)
+                minibuffer.set_edit_text(current_word)
+        elif focus == 'footer':
+            frame.set_focus('body')
+
+if __name__ == "__main__":
+    loop = urwid.MainLoop(frame, palette=palette,
+                          unhandled_input=handle_input)
+    if len(sys.argv) > 1:
+        get_file(sys.argv[1])
+    loop.run()

@@ -1,0 +1,20 @@
+minime — a minimalist editor inspired by sam(1), acme(1) and emacs(1)
+
+
+minime manages a buffer of text that may be edited interactively or by external programs.
+
+the minime interface consists of two text buffers, the main buffer at the top and the mini buffer at the bottom. the main buffer is for editable text, the minibuffer is for commands that act upon the text in the main buffer. minime takes a single optional argument, which is interpreted as a file from which to populate the main buffer.
+
+you can switch focus between buffers by pressing the tab key. if the minibuffer is empty, upon switching to the minibuffer the current word in the main buffer is copied to the mini buffer. upon pressing the return key while the minibuffer has focus, the text in the minibuffer is evaluated as a command. focus is then returned to the main buffer.
+
+if a command starts with a ”<” character, the following characters specify the name of a file. text is read into the main buffer from that file. if a command starts with a “>” character, the following characters specify the name of a file. text is written into the file from the main buffer. successful loading or saving removes the first character from the minibuffer, leaving the filename.
+
+if a command starts with a “|” character, the following characters specify a shell command. the content of the main buffer is given to the shell command on standard input and the output of the shell command is written into the main buffer. if a command starts with another character, the command is evaluated as a shell command with the empty string given on standard input.
+
+example commands:
+
+ - “<README” loads the file “README” from the current directory
+ - “>README” writes the contents of the main buffer into the file “README”
+ - “|sort” sorts the lines of the main buffer using sort(1)
+ - “ls” lists files in the current directory using ls(1)
+
