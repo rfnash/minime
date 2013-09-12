@@ -9,7 +9,7 @@ you can switch focus between buffers by pressing the tab key. if the minibuffer 
 
 if a command starts with a ”<” character, the following characters specify the name of a file. text is read into the main buffer from that file. if a command starts with a “>” character, the following characters specify the name of a file. text is written into the file from the main buffer. successful loading or saving removes the first character from the minibuffer, leaving the filename.
 
-if a command starts with a “|” character, the following characters specify a shell command. the content of the main buffer is given to the shell command on standard input and the output of the shell command is written into the main buffer. if a command starts with another character, the command is evaluated as a shell command with the empty string given on standard input.
+if a command starts with a “|” character, the following characters specify a shell command. the content of the main buffer is given to the shell command on standard input and the output of the shell command replaces the content of the main buffer. if a command starts with another character, the command is evaluated as a shell command with the empty string given on standard input and the output is appended to the main buffer at the current cursor position.
 
 example commands:
 

@@ -31,7 +31,10 @@ def handle_external_command(command, text):
     process.stdin.write(text.encode('utf-8'))
     process.stdin.close()
     result = process.stdout.read().decode('utf-8')
-    mainbuffer.set_edit_text(result)
+    if text == u'':
+        mainbuffer.insert_text(result)
+    else:
+        mainbuffer.set_edit_text(result)
     minibuffer.set_edit_text(u'')
 
 def get_file(argument):
