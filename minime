@@ -16,14 +16,28 @@
 import string
 import subprocess
 import sys
-import urwid
+
+from urwid import AttrWrap, CompositeCanvas, Edit, Filler, Frame, \
+    MainLoop, Text
+
+class Buffer(Edit):
+    def render(self, size, focus=False):
+        """
+        Render buffer widget and return canvas. Always include cursor.
+        """
+        (maxcol,)=size
+        self._shift_view_to_cursor = True
+        canvas = Text.render(self, (maxcol,))
+        canvas = CompositeCanvas(canvas)
+        canvas.cursor = self.get_cursor_coords((maxcol,))
+        return canvas
 
 palette = [ ('mini', 'black', 'white') ]
-mainbuffer = urwid.Edit(edit_text=u'', multiline=True, align='left')
-mainfiller = urwid.Filler(mainbuffer, valign='top')
-minibuffer = urwid.Edit(edit_text=u'', multiline=False, align='left')
-mini_attr = urwid.AttrWrap(minibuffer, 'mini')
-frame = urwid.Frame(body=mainfiller, footer=mini_attr, focus_part='body')
+mainbuffer = Buffer(edit_text=u'', multiline=True, align='left')
+mainfiller = Filler(mainbuffer, valign='top')
+minibuffer = Edit(edit_text=u'', multiline=False, align='left')
+mini_attr = AttrWrap(minibuffer, 'mini')
+frame = Frame(body=mainfiller, footer=mini_attr, focus_part='body')
 
 def handle_external_command(command, text):
     process = subprocess.Popen([command], stdin=subprocess.PIPE,
@@ -100,7 +114,7 @@ def handle_input(key):
             frame.set_focus('body')
 
 if __name__ == "__main__":
-    loop = urwid.MainLoop(frame, palette=palette,
+    loop = MainLoop(frame, palette=palette,
                           unhandled_input=handle_input)
     if len(sys.argv) > 1:
         get_file(sys.argv[1])
