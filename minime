@@ -18,7 +18,8 @@ import subprocess
 import sys
 
 from urwid import AttrWrap, CompositeCanvas, Edit, Filler, Frame, \
-    MainLoop, Text
+    MainLoop, Text, widget
+from urwid.widget import apply_text_layout, move_next_char, move_prev_char
 
 class Buffer(Edit):
     def keypress(self, size, key):
@@ -29,6 +30,41 @@ class Buffer(Edit):
             key = 'home'
         elif key == 'ctrl e':
             key = 'end'
+        elif key == 'shift left':
+            p = self.edit_pos
+            if p==0:
+                return key
+            p = move_prev_char(self.edit_text,0,p)
+            self.set_edit_pos_keep_highlight(p)
+            if self.highlight:
+                start, stop = self.highlight
+                if p == start:
+                    self.highlight = None
+                elif start < p < stop:
+                    self.highlight = (start, stop-1)
+                elif p < start:
+                    self.highlight = (start-1, stop)
+            else:
+                self.highlight = (p, p+1)
+            self._invalidate()
+        elif key == 'shift right':
+            p = self.edit_pos
+            if p >= len(self.edit_text):
+                return key
+            p = move_next_char(self.edit_text,p,len(self.edit_text))
+            self.set_edit_pos_keep_highlight(p)
+            if self.highlight:
+                start, stop = self.highlight
+                if p == stop:
+                    self.highlight = None
+                elif start < p < stop:
+                    self.highlight = (start+1, stop)
+                elif p > stop:
+                    self.highlight = (start, stop+1)
+            else:
+                self.highlight = (p-1, p)
+            self._invalidate()
+
         return super(Buffer, self).keypress(size, key)
 
     def render(self, size, focus=False):
@@ -37,16 +73,26 @@ class Buffer(Edit):
         """
         (maxcol,)=size
         self._shift_view_to_cursor = True
-        canvas = Text.render(self, (maxcol,))
+        text, attr = self.get_text()
+        if self.highlight:
+            start, stop = self.highlight
+            attr = [(None, start), ('reverse', stop-start)]
+        trans = self.get_line_translation(maxcol, (text, attr))
+        canvas = apply_text_layout(text, attr, trans, maxcol)
         canvas = CompositeCanvas(canvas)
         canvas.cursor = self.get_cursor_coords((maxcol,))
         return canvas
 
-palette = [ ('mini', 'black', 'white') ]
+    def set_edit_pos_keep_highlight(self, pos):
+        highlight = self.highlight
+        super(Buffer, self).set_edit_pos(pos)
+        self.highlight = highlight
+
+palette = [ ('reverse', 'black', 'white') ]
 mainbuffer = Buffer(edit_text=u'', multiline=True, align='left')
 mainfiller = Filler(mainbuffer, valign='top')
 minibuffer = Edit(edit_text=u'', multiline=False, align='left')
-mini_attr = AttrWrap(minibuffer, 'mini')
+mini_attr = AttrWrap(minibuffer, 'reverse')
 frame = Frame(body=mainfiller, footer=mini_attr, focus_part='body')
 
 def handle_external_command(command, text):
