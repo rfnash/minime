@@ -21,6 +21,16 @@ from urwid import AttrWrap, CompositeCanvas, Edit, Filler, Frame, \
     MainLoop, Text
 
 class Buffer(Edit):
+    def keypress(self, size, key):
+        # Unix Keyboard Shortcuts <http://unix-kb.cat-v.org/>
+        if key == 'ctrl h':
+            key = 'backspace'
+        elif key == 'ctrl a':
+            key = 'home'
+        elif key == 'ctrl e':
+            key = 'end'
+        return super(Buffer, self).keypress(size, key)
+
     def render(self, size, focus=False):
         """
         Render buffer widget and return canvas. Always include cursor.
