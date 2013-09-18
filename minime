@@ -35,6 +35,20 @@ def move_next_word(text, start_offs, end_offs):
         start_offs+=1
     return start_offs
 
+def move_prev_paragraph(text, start_offs, end_offs):
+    while(end_offs!=0):
+        if text[end_offs-1:end_offs+1] == u'\n\n':
+            break
+        end_offs-=1
+    return end_offs
+
+def move_next_paragraph(text, start_offs, end_offs):
+    while(start_offs!=len(text)):
+        if text[start_offs-1:start_offs+1] == u'\n\n':
+            break
+        start_offs+=1
+    return start_offs
+
 class Buffer(Edit):
     def get_highlight_text(self):
         if self.highlight:
@@ -134,7 +148,18 @@ class Buffer(Edit):
             else:
                 self.highlight = (p, q)
             self._invalidate()
-
+        elif key == 'ctrl up':
+            p = self.edit_pos
+            if p==0:
+                return key
+            p = move_prev_paragraph(self.edit_text,0,p-1)
+            self.set_edit_pos(p)
+        elif key == 'ctrl down':
+            p = self.edit_pos
+            if p>=len(self.edit_text):
+                return key
+            p = move_next_paragraph(self.edit_text,p+1,len(self.edit_text))
+            self.set_edit_pos(p)
 
         return super(Buffer, self).keypress(size, key)
 
