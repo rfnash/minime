@@ -23,14 +23,14 @@ from urwid.widget import apply_text_layout, move_next_char, move_prev_char
 
 def move_prev_word(text, start_offs, end_offs):
     while(end_offs!=0):
-        if text[end_offs-1] in string.whitespace:
+        if text[end_offs-1] in string.whitespace+string.punctuation:
             break
         end_offs-=1
     return end_offs
 
 def move_next_word(text, start_offs, end_offs):
     while(start_offs!=len(text)):
-        if text[start_offs] in string.whitespace:
+        if text[start_offs] in string.whitespace+string.punctuation:
             break
         start_offs+=1
     return start_offs
