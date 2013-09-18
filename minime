@@ -179,7 +179,13 @@ def handle_command(command):
         prefix, argument = command[0], command[1:]
     except IndexError:
         return
-    if prefix == '<':  # replace selection by stdout of command
+    if prefix == '#':
+        try:
+            p=int(argument)
+            mainbuffer.set_edit_pos(p)
+        except ValueError:
+            pass
+    elif prefix == '<':  # replace selection by stdout of command
         inputtext = handle_external_command(argument, u'')
         mainbuffer.insert_text(inputtext)
     elif prefix == '>':  # send selection to stdin of command
