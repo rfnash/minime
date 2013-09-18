@@ -21,6 +21,20 @@ from urwid import AttrWrap, CompositeCanvas, Edit, Filler, Frame, \
     MainLoop, Text, widget
 from urwid.widget import apply_text_layout, move_next_char, move_prev_char
 
+def move_prev_word(text, start_offs, end_offs):
+    while(end_offs!=0):
+        if text[end_offs-1] in string.whitespace:
+            break
+        end_offs-=1
+    return end_offs
+
+def move_next_word(text, start_offs, end_offs):
+    while(start_offs!=len(text)):
+        if text[start_offs] in string.whitespace:
+            break
+        start_offs+=1
+    return start_offs
+
 class Buffer(Edit):
     def keypress(self, size, key):
         # Unix Keyboard Shortcuts <http://unix-kb.cat-v.org/>
@@ -64,6 +78,18 @@ class Buffer(Edit):
             else:
                 self.highlight = (p-1, p)
             self._invalidate()
+        elif key == 'ctrl left':
+            p = self.edit_pos
+            if p==0:
+                return key
+            p = move_prev_word(self.edit_text,0,p-1)
+            self.set_edit_pos(p)
+        elif key == 'ctrl right':
+            p = self.edit_pos
+            if p>=len(self.edit_text):
+                return key
+            p = move_next_word(self.edit_text,p+1,len(self.edit_text))
+            self.set_edit_pos(p)
 
         return super(Buffer, self).keypress(size, key)
 
