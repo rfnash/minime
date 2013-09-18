@@ -23,29 +23,25 @@ from urwid.widget import apply_text_layout, move_next_char, move_prev_char
 
 def move_prev_word(text, start_offs, end_offs):
     while(end_offs!=0):
-        if text[end_offs-1] in string.whitespace+string.punctuation:
-            break
+        if text[end_offs-1] in string.whitespace+string.punctuation: break
         end_offs-=1
     return end_offs
 
 def move_next_word(text, start_offs, end_offs):
     while(start_offs!=len(text)):
-        if text[start_offs] in string.whitespace+string.punctuation:
-            break
+        if text[start_offs] in string.whitespace+string.punctuation: break
         start_offs+=1
     return start_offs
 
 def move_prev_paragraph(text, start_offs, end_offs):
     while(end_offs!=0):
-        if text[end_offs-1:end_offs+1] == u'\n\n':
-            break
+        if text[end_offs-1:end_offs+1] == u'\n\n': break
         end_offs-=1
     return end_offs
 
 def move_next_paragraph(text, start_offs, end_offs):
     while(start_offs!=len(text)):
-        if text[start_offs-1:start_offs+1] == u'\n\n':
-            break
+        if text[start_offs-1:start_offs+1] == u'\n\n': break
         start_offs+=1
     return start_offs
 
@@ -57,17 +53,13 @@ class Buffer(Edit):
         return u''
 
     def keypress(self, size, key):
+        p = self.edit_pos
         # Unix Keyboard Shortcuts <http://unix-kb.cat-v.org/>
-        if key == 'ctrl h':
-            key = 'backspace'
-        elif key == 'ctrl a':
-            key = 'home'
-        elif key == 'ctrl e':
-            key = 'end'
+        if key == 'ctrl h': key = 'backspace'
+        elif key == 'ctrl a': key = 'home'
+        elif key == 'ctrl e': key = 'end'
         elif key == 'shift left':
-            p = self.edit_pos
-            if p==0:
-                return key
+            if p==0: return key
             p = move_prev_char(self.edit_text,0,p)
             self.set_edit_pos_keep_highlight(p)
             if self.highlight:
@@ -82,9 +74,7 @@ class Buffer(Edit):
                 self.highlight = (p, p+1)
             self._invalidate()
         elif key == 'shift right':
-            p = self.edit_pos
-            if p >= len(self.edit_text):
-                return key
+            if p >= len(self.edit_text): return key
             p = move_next_char(self.edit_text,p,len(self.edit_text))
             self.set_edit_pos_keep_highlight(p)
             if self.highlight:
@@ -99,21 +89,15 @@ class Buffer(Edit):
                 self.highlight = (p-1, p)
             self._invalidate()
         elif key == 'ctrl left':
-            p = self.edit_pos
-            if p==0:
-                return key
+            if p==0: return key
             p = move_prev_word(self.edit_text,0,p-1)
             self.set_edit_pos(p)
         elif key == 'ctrl right':
-            p = self.edit_pos
-            if p>=len(self.edit_text):
-                return key
+            if p>=len(self.edit_text): return key
             p = move_next_word(self.edit_text,p+1,len(self.edit_text))
             self.set_edit_pos(p)
         elif key == 'shift meta left':
-            p = self.edit_pos
-            if p==0:
-                return key
+            if p==0: return key
             q = move_prev_word(self.edit_text,0,p-1)
             self.set_edit_pos_keep_highlight(q)
             if self.highlight:
@@ -130,9 +114,7 @@ class Buffer(Edit):
                 self.highlight = (q, p)
             self._invalidate()
         elif key == 'shift meta right':
-            p = self.edit_pos
-            if p>=len(self.edit_text):
-                return key
+            if p>=len(self.edit_text): return key
             q = move_next_word(self.edit_text,p+1,len(self.edit_text))
             self.set_edit_pos_keep_highlight(q)
             if self.highlight:
@@ -149,15 +131,11 @@ class Buffer(Edit):
                 self.highlight = (p, q)
             self._invalidate()
         elif key == 'ctrl up':
-            p = self.edit_pos
-            if p==0:
-                return key
+            if p==0: return key
             p = move_prev_paragraph(self.edit_text,0,p-1)
             self.set_edit_pos(p)
         elif key == 'ctrl down':
-            p = self.edit_pos
-            if p>=len(self.edit_text):
-                return key
+            if p>=len(self.edit_text): return key
             p = move_next_paragraph(self.edit_text,p+1,len(self.edit_text))
             self.set_edit_pos(p)
 
