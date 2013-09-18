@@ -96,6 +96,45 @@ class Buffer(Edit):
                 return key
             p = move_next_word(self.edit_text,p+1,len(self.edit_text))
             self.set_edit_pos(p)
+        elif key == 'shift meta left':
+            p = self.edit_pos
+            if p==0:
+                return key
+            q = move_prev_word(self.edit_text,0,p-1)
+            self.set_edit_pos_keep_highlight(q)
+            if self.highlight:
+                start, stop = self.highlight
+                if q == start:
+                    self.highlight = None
+                elif start < q < stop:
+                    self.highlight = (start, stop-(p-q))
+                elif q < p == start:
+                    self.highlight = (start-(p-q), stop)
+                elif q < start < p:
+                    self.highlight = (q, start)
+            else:
+                self.highlight = (q, p)
+            self._invalidate()
+        elif key == 'shift meta right':
+            p = self.edit_pos
+            if p>=len(self.edit_text):
+                return key
+            q = move_next_word(self.edit_text,p+1,len(self.edit_text))
+            self.set_edit_pos_keep_highlight(q)
+            if self.highlight:
+                start, stop = self.highlight
+                if q == stop:
+                    self.highlight = None
+                elif start < q < stop:
+                    self.highlight = (start+(q-p), stop)
+                elif p == stop < q:
+                    self.highlight = (start, stop+(q-p))
+                elif p < stop < q:
+                    self.highlight = (stop, q)
+            else:
+                self.highlight = (p, q)
+            self._invalidate()
+
 
         return super(Buffer, self).keypress(size, key)
 
