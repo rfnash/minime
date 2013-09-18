@@ -5,16 +5,24 @@ minime manages a buffer of text that may be edited interactively or by external 
 
 the minime interface consists of two text buffers, the main buffer at the top and the mini buffer at the bottom. the main buffer is for editable text, the minibuffer is for commands that act upon the text in the main buffer. minime takes a single optional argument, which is interpreted as a file from which to populate the main buffer.
 
-you can switch focus between buffers by pressing the tab key. if the minibuffer is empty, upon switching to the minibuffer the current word in the main buffer is copied to the mini buffer. upon pressing the return key while the minibuffer has focus, the text in the minibuffer is evaluated as a command. focus is then returned to the main buffer.
+basic text movement is possible through use of the arrow keys and the standard unix keyboard shortcuts “ctrl h” / “backspace”, “ctrl a” / ”home”, “ctrl e” / “end”. “ctrl left” and “ctrl right” move to the previous or next word; “ctrl up” and “ctrl down” move to the previous or next paragraph.
 
-if a command starts with a ”<” character, the following characters specify the name of a file. text is read into the main buffer from that file. if a command starts with a “>” character, the following characters specify the name of a file. text is written into the file from the main buffer. successful loading or saving removes the first character from the minibuffer, leaving the filename.
+text highlighting is possible using the shift key and movement keys. “shift left” and “shift right” grow or shrink the highlight by a single character; “shift up” and “shift down” grow or shrink the highlight by one line. “shift meta left” and “shift meta right” grow or shrink the selection by one word.
 
-if a command starts with a “|” character, the following characters specify a shell command. the content of the main buffer is given to the shell command on standard input and the output of the shell command replaces the content of the main buffer. if a command starts with another character, the command is evaluated as a shell command with the empty string given on standard input and the output is appended to the main buffer at the current cursor position.
+you can switch focus between buffers by pressing the tab key. upon pressing the return key while the minibuffer has focus, the text in the minibuffer is evaluated as a command. focus is then returned to the main buffer.
+
+if a command starts with a “#” character, the cursor is moved to the position after the character given by the following characters. if a command starts with a “<”, “>”, “|” or “!” character, the following characters specify a shell command which is then executed by minime.
+
+“<” inserts the standard output of the command into the main buffer.
+“>” sends the highlight to the standard input of the shell command.
+“|” sends the highlight to the standard input of the shell command and inserts the standard output of the command into the main buffer.
+“!” runs the shell command.
 
 example commands:
 
- - “<README” loads the file “README” from the current directory
- - “>README” writes the contents of the main buffer into the file “README”
- - “|sort” sorts the lines of the main buffer using sort(1)
- - “ls” lists files in the current directory using ls(1)
+ - “#0” moves to the beginning of the file
+ - “<cat README” loads the file “README” from the current directory
+ - “>cat>README” writes the contents of the main buffer into the file “README”
+ - “|md5sum” sorts the selected lines using sort(1)
+ - “!xterm” starts a terminal emulator for X11
 
