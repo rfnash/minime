@@ -174,14 +174,24 @@ def handle_command(command):
             pass
     elif prefix == '<':  # replace selection by stdout of command
         inputtext = handle_external_command(argument, u'')
+        start = mainbuffer.edit_pos
         mainbuffer.insert_text(inputtext)
+        mainbuffer.highlight = (start, mainbuffer.edit_pos)
     elif prefix == '>':  # send selection to stdin of command
         outputtext = mainbuffer.get_highlight_text()
+        if outputtext == u'': outputtext = mainbuffer.get_text()[0]
         handle_external_command(argument, outputtext)
     elif prefix == '|':  # replace selection by stdout of command
         inputtext = mainbuffer.get_highlight_text()
-        outputtext = handle_external_command(argument, inputtext)
-        mainbuffer.insert_text(outputtext)
+        if inputtext == u'':
+            inputtext = mainbuffer.get_text()[0]
+            outputtext = handle_external_command(argument, inputtext)
+            mainbuffer.set_edit_text(outputtext)
+        else:
+            outputtext = handle_external_command(argument, inputtext)
+            start = mainbuffer.highlight[0]
+            mainbuffer.insert_text(outputtext)
+            mainbuffer.highlight = (start, mainbuffer.edit_pos)
     elif prefix == '!':  # run command
         handle_external_command(argument, u'')
     minibuffer.set_edit_text(argument)
