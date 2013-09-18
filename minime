@@ -52,6 +52,38 @@ class Buffer(Edit):
             return self.edit_text[start:stop]
         return u''
 
+    def extend_selection_left(self, p, q):
+        self.set_edit_pos_keep_highlight(q)
+        if self.highlight:
+            start, stop = self.highlight
+            if q == start:
+                self.highlight = None
+            elif start < q < stop:
+                self.highlight = (start, stop-(p-q))
+            elif q < p == start:
+                self.highlight = (start-(p-q), stop)
+            elif q < start < p:
+                self.highlight = (q, start)
+        else:
+            self.highlight = (q, p)
+        self._invalidate()
+
+    def extend_selection_right(self, p, q):
+        self.set_edit_pos_keep_highlight(q)
+        if self.highlight:
+            start, stop = self.highlight
+            if q == stop:
+                self.highlight = None
+            elif start < q < stop:
+                self.highlight = (start+(q-p), stop)
+            elif p == stop < q:
+                self.highlight = (start, stop+(q-p))
+            elif p < stop < q:
+                self.highlight = (stop, q)
+        else:
+            self.highlight = (p, q)
+        self._invalidate()
+
     def keypress(self, size, key):
         p = self.edit_pos
         # Unix Keyboard Shortcuts <http://unix-kb.cat-v.org/>
@@ -61,33 +93,11 @@ class Buffer(Edit):
         elif key == 'shift left':
             if p==0: return key
             p = move_prev_char(self.edit_text,0,p)
-            self.set_edit_pos_keep_highlight(p)
-            if self.highlight:
-                start, stop = self.highlight
-                if p == start:
-                    self.highlight = None
-                elif start < p < stop:
-                    self.highlight = (start, stop-1)
-                elif p < start:
-                    self.highlight = (start-1, stop)
-            else:
-                self.highlight = (p, p+1)
-            self._invalidate()
+            self.extend_selection_left(p+1, p)
         elif key == 'shift right':
             if p >= len(self.edit_text): return key
             p = move_next_char(self.edit_text,p,len(self.edit_text))
-            self.set_edit_pos_keep_highlight(p)
-            if self.highlight:
-                start, stop = self.highlight
-                if p == stop:
-                    self.highlight = None
-                elif start < p < stop:
-                    self.highlight = (start+1, stop)
-                elif p > stop:
-                    self.highlight = (start, stop+1)
-            else:
-                self.highlight = (p-1, p)
-            self._invalidate()
+            self.extend_selection_right(p-1, p)
         elif key == 'ctrl left':
             if p==0: return key
             p = move_prev_word(self.edit_text,0,p-1)
@@ -99,37 +109,11 @@ class Buffer(Edit):
         elif key == 'shift meta left':
             if p==0: return key
             q = move_prev_word(self.edit_text,0,p-1)
-            self.set_edit_pos_keep_highlight(q)
-            if self.highlight:
-                start, stop = self.highlight
-                if q == start:
-                    self.highlight = None
-                elif start < q < stop:
-                    self.highlight = (start, stop-(p-q))
-                elif q < p == start:
-                    self.highlight = (start-(p-q), stop)
-                elif q < start < p:
-                    self.highlight = (q, start)
-            else:
-                self.highlight = (q, p)
-            self._invalidate()
+            self.extend_selection_left(p, q)
         elif key == 'shift meta right':
             if p>=len(self.edit_text): return key
             q = move_next_word(self.edit_text,p+1,len(self.edit_text))
-            self.set_edit_pos_keep_highlight(q)
-            if self.highlight:
-                start, stop = self.highlight
-                if q == stop:
-                    self.highlight = None
-                elif start < q < stop:
-                    self.highlight = (start+(q-p), stop)
-                elif p == stop < q:
-                    self.highlight = (start, stop+(q-p))
-                elif p < stop < q:
-                    self.highlight = (stop, q)
-            else:
-                self.highlight = (p, q)
-            self._invalidate()
+            self.extend_selection_right(p, q)
         elif key == 'ctrl up':
             if p==0: return key
             p = move_prev_paragraph(self.edit_text,0,p-1)
