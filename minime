@@ -36,6 +36,12 @@ def move_next_word(text, start_offs, end_offs):
     return start_offs
 
 class Buffer(Edit):
+    def get_highlight_text(self):
+        if self.highlight:
+            start, stop = self.highlight
+            return self.edit_text[start:stop]
+        return u''
+
     def keypress(self, size, key):
         # Unix Keyboard Shortcuts <http://unix-kb.cat-v.org/>
         if key == 'ctrl h':
@@ -127,71 +133,38 @@ def handle_external_command(command, text):
     process.stdin.write(text.encode('utf-8'))
     process.stdin.close()
     result = process.stdout.read().decode('utf-8')
-    if text == u'':
-        mainbuffer.insert_text(result)
-    else:
-        mainbuffer.set_edit_text(result)
-    minibuffer.set_edit_text(u'')
+    return result
 
-def get_file(argument):
-    result = u''
-    try:
-        with open(argument, 'r') as inputfile:
-            result = inputfile.read().decode('utf-8')
-            mainbuffer.set_edit_text(result)
-            minibuffer.set_edit_text(argument)
-            minibuffer.set_edit_pos(0)
-    except IOError:
-        pass
-
-def put_file(argument, text):
-    try:
-        with open(argument, 'w') as outputfile:
-            outputfile.write(text.encode('utf-8'))
-            minibuffer.set_edit_text(argument)
-            minibuffer.set_edit_pos(0)
-    except IOError:
-        pass
-
-def handle_command(command, text):
+def handle_command(command):
     try:
         prefix, argument = command[0], command[1:]
     except IndexError:
         return
-    if prefix == '<':
-        get_file(argument)
-    elif prefix == '>':
-        put_file(argument, text)
-    elif prefix == '|':
-        handle_external_command(argument, text)
-    else:
-        handle_external_command(command, u'')
+    if prefix == '<':  # replace selection by stdout of command
+        inputtext = handle_external_command(argument, u'')
+        mainbuffer.insert_text(inputtext)
+    elif prefix == '>':  # send selection to stdin of command
+        outputtext = mainbuffer.get_highlight_text()
+        handle_external_command(argument, outputtext)
+    elif prefix == '|':  # replace selection by stdout of command
+        inputtext = mainbuffer.get_highlight_text()
+        outputtext = handle_external_command(argument, inputtext)
+        mainbuffer.insert_text(outputtext)
+    elif prefix == '!':  # run command
+        handle_external_command(argument, u'')
+    minibuffer.set_edit_text(argument)
+    minibuffer.set_edit_pos(0)
     frame.set_focus('body')
-
-def word_at_pos(text, pos):
-    start = end = pos
-    while(start!=0):
-        if text[start-1] in string.whitespace:
-            break
-        start-=1
-    while(end!=len(text)):
-        if text[end] in string.whitespace:
-            break
-        end+=1
-    return text[start:end]
 
 def handle_input(key):
     focus = frame.get_focus()
-    maintext, minitext = mainbuffer.get_text()[0], minibuffer.get_text()[0]
     if key == 'enter':
         if focus == 'footer':
-            handle_command(minitext, maintext)
+            command = minibuffer.get_text()[0]
+            handle_command(command)
     if key == 'tab':
         if focus == 'body':
             frame.set_focus('footer')
-            if minitext == u'':
-                current_word = word_at_pos(maintext, mainbuffer.edit_pos)
-                minibuffer.set_edit_text(current_word)
         elif focus == 'footer':
             frame.set_focus('body')
 
@@ -199,5 +172,8 @@ if __name__ == "__main__":
     loop = MainLoop(frame, palette=palette,
                           unhandled_input=handle_input)
     if len(sys.argv) > 1:
-        get_file(sys.argv[1])
+        with open(sys.argv[1]) as inputfile:
+            inputtext = inputfile.read().decode('utf-8')
+            mainbuffer.insert_text(inputtext)
+            mainbuffer.set_edit_pos(0)
     loop.run()
