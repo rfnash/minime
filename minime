@@ -98,6 +98,21 @@ class Buffer(Edit):
             if p >= len(self.edit_text): return key
             p = move_next_char(self.edit_text,p,len(self.edit_text))
             self.extend_selection_right(p-1, p)
+        elif key in ('shift up', 'shift down'):
+            (maxcol,) = size
+            x,y = self.get_cursor_coords((maxcol,))
+            pref_col = self.get_pref_col((maxcol,))
+            highlight = self.highlight
+            if key == 'shift up':
+                if not self.move_cursor_to_coords((maxcol,),pref_col,y-1):
+                    return key
+                self.highlight = highlight
+                self.extend_selection_left(p, self.edit_pos)
+            elif key == 'shift down':
+                if not self.move_cursor_to_coords((maxcol,),pref_col,y+1):
+                    return key
+                self.highlight = highlight
+                self.extend_selection_right(p, self.edit_pos)
         elif key == 'ctrl left':
             if p==0: return key
             p = move_prev_word(self.edit_text,0,p-1)
