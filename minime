@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 from urwid import AttrWrap, CompositeCanvas, Edit, Filler, Frame, \
-    MainLoop, Text, widget
+    GridFlow, MainLoop, Text, widget
 from urwid.widget import apply_text_layout, move_next_char, move_prev_char
 
 def move_prev_word(text, start_offs, end_offs):
@@ -161,14 +161,6 @@ class Buffer(Edit):
         super(Buffer, self).set_edit_pos(pos)
         self.highlight = highlight
 
-palette = [ ('reverse', 'black', 'white') ]
-mainbuffer = Buffer(edit_text=u'', multiline=True, align='left')
-mainfiller = Filler(mainbuffer, valign='top')
-minibuffer = Edit(edit_text=u'', multiline=False, align='left')
-mini_attr = AttrWrap(minibuffer, 'reverse')
-frame = Frame(body=mainfiller, footer=mini_attr, focus_part='body')
-
-
 def handle_external_command(command, text=u'', output=False):
     process = subprocess.Popen([command], stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, shell=True)
@@ -202,7 +194,7 @@ def handle_command(command):
         inputtext = mainbuffer.get_highlight_text()
         if inputtext == u'':
             inputtext = mainbuffer.get_text()[0]
-            outputtext = handle_external_command(argument, output=True)
+            outputtext = handle_external_command(argument, inputtext, True)
             mainbuffer.set_edit_text(outputtext)
         else:
             outputtext = handle_external_command(argument, inputtext, True)
@@ -215,11 +207,12 @@ def handle_command(command):
     minibuffer.set_edit_pos(0)
     frame.set_focus('body')
 
-keybindings = {}
 def handle_input(key):
     focus = frame.get_focus()
     if key in keybindings.keys():
+        minibuffertext = minibuffer.get_edit_text()
         handle_command(keybindings[key])
+        minibuffer.set_edit_text(minibuffertext)
     if key == 'enter':
         if focus == 'footer':
             command = minibuffer.get_text()[0]
@@ -231,11 +224,28 @@ def handle_input(key):
             frame.set_focus('body')
 
 if __name__ == "__main__":
-    with open('minimerc') as configfile:
-        for line in configfile.readlines():
-            key, command = line.split(',')
-            keybindings[key] = command.strip()
-    loop = MainLoop(frame, palette=palette,
+    palette = [ ('reverse', 'black', 'white') ]
+    mainbuffer = Buffer(edit_text=u'', multiline=True, align='left')
+    mainfiller = Filler(mainbuffer, valign='top')
+    minibuffer = Edit(edit_text=u'', multiline=False, align='left')
+    mini_attr = AttrWrap(minibuffer, 'reverse')
+    frame = Frame(body=mainfiller, footer=mini_attr, focus_part='body')
+    keybindings, keywidgets, keywidth = {}, [], 0
+    try:
+        with open('minimerc') as configfile:
+            for line in configfile.readlines():
+                key, command = line.strip().split(',')
+                keybindings[key] = command
+                key = key.replace(u'ctrl ', u'C-').replace(u'meta ', u'M-')
+                keylabel = Text([('reverse', key), (' '), (command)])
+                if len(keylabel.get_text()[0]) > keywidth:
+                    keywidth = len(keylabel.get_text()[0])
+                keywidgets.append(keylabel)
+        keygrid = GridFlow(keywidgets, keywidth, 1, 0, 'left')
+        chrome = Frame(body=frame, footer=keygrid, focus_part='body')
+    except IOError:
+        chrome = frame
+    loop = MainLoop(chrome, palette=palette,
                           unhandled_input=handle_input)
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as inputfile:

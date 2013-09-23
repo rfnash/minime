@@ -1,0 +1,8 @@
+ctrl n,|true
+meta w,>xsel -i
+ctrl w,|xsel -i
+ctrl y,<xsel -o
+meta q,|fmt -w80 -g72
+meta l,|ls
+ctrl o,|xargs cat
+meta o,>xargs xdg-open
