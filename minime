@@ -215,8 +215,11 @@ def handle_command(command):
     minibuffer.set_edit_pos(0)
     frame.set_focus('body')
 
+keybindings = {}
 def handle_input(key):
     focus = frame.get_focus()
+    if key in keybindings.keys():
+        handle_command(keybindings[key])
     if key == 'enter':
         if focus == 'footer':
             command = minibuffer.get_text()[0]
@@ -228,6 +231,10 @@ def handle_input(key):
             frame.set_focus('body')
 
 if __name__ == "__main__":
+    with open('minimerc') as configfile:
+        for line in configfile.readlines():
+            key, command = line.split(',')
+            keybindings[key] = command.strip()
     loop = MainLoop(frame, palette=palette,
                           unhandled_input=handle_input)
     if len(sys.argv) > 1:
