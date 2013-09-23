@@ -168,13 +168,15 @@ minibuffer = Edit(edit_text=u'', multiline=False, align='left')
 mini_attr = AttrWrap(minibuffer, 'reverse')
 frame = Frame(body=mainfiller, footer=mini_attr, focus_part='body')
 
-def handle_external_command(command, text):
+
+def handle_external_command(command, text=u'', output=False):
     process = subprocess.Popen([command], stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, shell=True)
-    process.stdin.write(text.encode('utf-8'))
+    if text != u'':
+        process.stdin.write(text.encode('utf-8'))
     process.stdin.close()
-    result = process.stdout.read().decode('utf-8')
-    return result
+    if output:
+        return process.stdout.read().decode('utf-8')
 
 def handle_command(command):
     try:
@@ -188,7 +190,7 @@ def handle_command(command):
         except ValueError:
             pass
     elif prefix == '<':  # replace selection by stdout of command
-        inputtext = handle_external_command(argument, u'')
+        inputtext = handle_external_command(argument, output=True)
         start = mainbuffer.edit_pos
         mainbuffer.insert_text(inputtext)
         mainbuffer.highlight = (start, mainbuffer.edit_pos)
@@ -200,15 +202,15 @@ def handle_command(command):
         inputtext = mainbuffer.get_highlight_text()
         if inputtext == u'':
             inputtext = mainbuffer.get_text()[0]
-            outputtext = handle_external_command(argument, inputtext)
+            outputtext = handle_external_command(argument, output=True)
             mainbuffer.set_edit_text(outputtext)
         else:
-            outputtext = handle_external_command(argument, inputtext)
+            outputtext = handle_external_command(argument, inputtext, True)
             start = mainbuffer.highlight[0]
             mainbuffer.insert_text(outputtext)
             mainbuffer.highlight = (start, mainbuffer.edit_pos)
     elif prefix == '!':  # run command
-        handle_external_command(argument, u'')
+        handle_external_command(argument)
     minibuffer.set_edit_text(argument)
     minibuffer.set_edit_pos(0)
     frame.set_focus('body')
