@@ -23,6 +23,6 @@ example commands:
  - “#0” moves to the beginning of the file
  - “<cat README” loads the file “README” from the current directory
  - “>cat>README” writes the contents of the main buffer into the file “README”
- - “|md5sum” sorts the selected lines using sort(1)
+ - “|sort” sorts the selected lines using sort(1)
  - “!xterm” starts a terminal emulator for X11
 
