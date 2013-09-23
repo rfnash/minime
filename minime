@@ -17,8 +17,8 @@ import string
 import subprocess
 import sys
 
-from urwid import AttrWrap, CompositeCanvas, Edit, Filler, Frame, \
-    GridFlow, MainLoop, Text, widget
+from urwid import AttrWrap, CompositeCanvas, Edit, ExitMainLoop, Filler, \
+    Frame, GridFlow, MainLoop, Text, widget
 from urwid.widget import apply_text_layout, move_next_char, move_prev_char
 
 def move_prev_word(text, start_offs, end_offs):
@@ -175,7 +175,9 @@ def handle_command(command):
         prefix, argument = command[0], command[1:]
     except IndexError:
         return
-    if prefix == '#':
+    if prefix == 'q':
+        raise ExitMainLoop
+    elif prefix == '#':
         try:
             p=int(argument)
             mainbuffer.set_edit_pos(p)
