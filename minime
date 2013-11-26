@@ -16,6 +16,7 @@
 import string
 import subprocess
 import sys
+import os
 
 from urwid import AttrWrap, CompositeCanvas, Edit, ExitMainLoop, Filler, \
     Frame, GridFlow, MainLoop, Text, widget
@@ -234,7 +235,7 @@ if __name__ == "__main__":
     frame = Frame(body=mainfiller, footer=mini_attr, focus_part='body')
     keybindings, keywidgets, keywidth = {}, [], 0
     try:
-        with open('minimerc') as configfile:
+        with open(os.environ['HOME'] + '/.minimerc') as configfile:
             for line in configfile.readlines():
                 key, command = line.strip().split(',')
                 keybindings[key] = command
